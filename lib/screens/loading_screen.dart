@@ -26,13 +26,13 @@ class _LoadingScreenState extends State<LoadingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 24),
-            Text(
+            const CircularProgressIndicator(),
+            const SizedBox(height: 24),
+            const Text(
               'Loading...',
               style: TextStyle(fontSize: 18, color: Colors.grey),
             ),

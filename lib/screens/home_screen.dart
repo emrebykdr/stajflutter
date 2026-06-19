@@ -3,6 +3,7 @@ import 'video_player_screen.dart';
 import 'reels_screen.dart';
 import 'notification_screen.dart';
 import 'map_screen.dart';
+import 'test_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -51,6 +52,15 @@ class HomeScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MapScreen()),
+            ),
+          ),
+          _ModuleCard(
+            icon: Icons.science,
+            title: '5. Loading Deneme',
+            subtitle: '5sn loading ekrani',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TestScreen()),
             ),
           ),
         ],

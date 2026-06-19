@@ -24,6 +24,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   bool _isYoutube = false;
   bool _isLoading = true;
   String? _error;
+  bool _overlayVisible = true;
 
   @override
   void initState() {
@@ -126,86 +127,171 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         borderRadius: BorderRadius.circular(12),
         child: YoutubePlayer(
           controller: _youtubeController!,
-          showVideoProgressIndicator: widget.showControls,
+          showVideoProgressIndicator: true,
         ),
       );
     }
 
-    return Column(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: AspectRatio(
-            aspectRatio: _nativeController!.value.aspectRatio,
-            child: VideoPlayer(_nativeController!),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: AspectRatio(
+        aspectRatio: _nativeController!.value.aspectRatio,
+        child: GestureDetector(
+          onTap: () {
+            if (widget.showControls) {
+              setState(() => _overlayVisible = !_overlayVisible);
+            }
+          },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              VideoPlayer(_nativeController!),
+              if (widget.showControls)
+                AnimatedOpacity(
+                  opacity: _overlayVisible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 250),
+                  child: IgnorePointer(
+                    ignoring: !_overlayVisible,
+                    child: _NativeOverlayControls(
+                      controller: _nativeController!,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
-        if (widget.showControls) ...[
-          const SizedBox(height: 8),
-          _NativeControls(controller: _nativeController!),
-        ],
-      ],
+      ),
     );
   }
 }
 
-class _NativeControls extends StatefulWidget {
+class _NativeOverlayControls extends StatefulWidget {
   final VideoPlayerController controller;
 
-  const _NativeControls({required this.controller});
+  const _NativeOverlayControls({required this.controller});
 
   @override
-  State<_NativeControls> createState() => _NativeControlsState();
+  State<_NativeOverlayControls> createState() => _NativeOverlayControlsState();
 }
 
-class _NativeControlsState extends State<_NativeControls> {
+class _NativeOverlayControlsState extends State<_NativeOverlayControls> {
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(_onVideoChanged);
+    widget.controller.addListener(_onChanged);
   }
 
-  void _onVideoChanged() {
+  void _onChanged() {
     if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    widget.controller.removeListener(_onVideoChanged);
+    widget.controller.removeListener(_onChanged);
     super.dispose();
+  }
+
+  String _fmt(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (d.inHours > 0) return '${d.inHours}:$m:$s';
+    return '$m:$s';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          iconSize: 36,
-          icon: Icon(
-            widget.controller.value.isPlaying
-                ? Icons.pause_circle
-                : Icons.play_circle,
-            color: Theme.of(context).colorScheme.primary,
+    final pos = widget.controller.value.position;
+    final dur = widget.controller.value.duration;
+
+    return Container(
+      color: Colors.black.withValues(alpha: 0.4),
+      child: Column(
+        children: [
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                iconSize: 36,
+                icon: const Icon(Icons.replay_10, color: Colors.white),
+                onPressed: () {
+                  final np = pos - const Duration(seconds: 10);
+                  widget.controller
+                      .seekTo(np < Duration.zero ? Duration.zero : np);
+                },
+              ),
+              const SizedBox(width: 20),
+              IconButton(
+                iconSize: 56,
+                icon: Icon(
+                  widget.controller.value.isPlaying
+                      ? Icons.pause_circle_filled
+                      : Icons.play_circle_filled,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  widget.controller.value.isPlaying
+                      ? widget.controller.pause()
+                      : widget.controller.play();
+                },
+              ),
+              const SizedBox(width: 20),
+              IconButton(
+                iconSize: 36,
+                icon: const Icon(Icons.forward_10, color: Colors.white),
+                onPressed: () {
+                  final np = pos + const Duration(seconds: 10);
+                  widget.controller.seekTo(np > dur ? dur : np);
+                },
+              ),
+            ],
           ),
-          onPressed: () {
-            widget.controller.value.isPlaying
-                ? widget.controller.pause()
-                : widget.controller.play();
-          },
-        ),
-        IconButton(
-          iconSize: 36,
-          icon: Icon(
-            Icons.replay,
-            color: Theme.of(context).colorScheme.primary,
+          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
+            child: Row(
+              children: [
+                Text(
+                  _fmt(pos),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+                Expanded(
+                  child: SliderTheme(
+                    data: const SliderThemeData(
+                      trackHeight: 3,
+                      thumbShape:
+                          RoundSliderThumbShape(enabledThumbRadius: 6),
+                      overlayShape:
+                          RoundSliderOverlayShape(overlayRadius: 12),
+                      activeTrackColor: Colors.white,
+                      inactiveTrackColor: Colors.white30,
+                      thumbColor: Colors.white,
+                    ),
+                    child: Slider(
+                      value: dur.inMilliseconds > 0
+                          ? pos.inMilliseconds
+                              .toDouble()
+                              .clamp(0, dur.inMilliseconds.toDouble())
+                          : 0,
+                      max: dur.inMilliseconds > 0
+                          ? dur.inMilliseconds.toDouble()
+                          : 1,
+                      onChanged: (v) {
+                        widget.controller
+                            .seekTo(Duration(milliseconds: v.toInt()));
+                      },
+                    ),
+                  ),
+                ),
+                Text(
+                  _fmt(dur),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ],
+            ),
           ),
-          onPressed: () {
-            widget.controller.seekTo(Duration.zero);
-            widget.controller.play();
-          },
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

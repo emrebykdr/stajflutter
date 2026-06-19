@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/video_player_widget.dart';
+import 'reels_screen.dart';
+import 'reels_player_screen.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   const VideoPlayerScreen({super.key});
@@ -47,7 +49,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // URL giris alani
           TextField(
             controller: _urlController,
             decoration: InputDecoration(
@@ -63,7 +64,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Hazir URL butonlari
           Wrap(
             spacing: 8,
             children: [
@@ -85,7 +85,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Video player alani
           if (_currentUrl == null)
             const AspectRatio(
               aspectRatio: 16 / 9,
@@ -96,7 +95,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                     Icon(Icons.video_library, size: 48, color: Colors.grey),
                     SizedBox(height: 8),
                     Text(
-                      'URL girin veya hazir demolardan birini secin',
+                      'URL girin veya asagidan bir video secin',
                       style: TextStyle(color: Colors.grey),
                     ),
                   ],
@@ -105,7 +104,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             )
           else ...[
             Text(
-              _currentUrl!.contains('youtube.com') || _currentUrl!.contains('youtu.be')
+              _currentUrl!.contains('youtube.com') ||
+                      _currentUrl!.contains('youtu.be')
                   ? 'YouTube Video'
                   : 'Native Video',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -123,6 +123,90 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
               videoUrl: _currentUrl!,
             ),
           ],
+
+          const SizedBox(height: 32),
+          const Divider(),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Tüm Videolar',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              TextButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReelsScreen()),
+                ),
+                icon: const Icon(Icons.video_library, size: 18),
+                label: const Text('Reels\'de Gör'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...allVideos.map((video) => Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: SizedBox(
+                      width: 80,
+                      height: 50,
+                      child: video.isYoutube
+                          ? Image.network(
+                              video.thumbnailUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                color: Colors.grey.shade300,
+                                child: const Icon(Icons.play_circle,
+                                    color: Colors.grey),
+                              ),
+                            )
+                          : Container(
+                              color: Colors.grey.shade800,
+                              child: const Icon(Icons.videocam,
+                                  color: Colors.white, size: 24),
+                            ),
+                    ),
+                  ),
+                  title: Text(
+                    video.title,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: Text(
+                    video.isYoutube ? 'YouTube' : 'Native Video',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color:
+                          video.isYoutube ? Colors.red : Colors.green.shade700,
+                    ),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.play_arrow),
+                        onPressed: () => _playPreset(video.videoUrl),
+                        tooltip: 'Oynat',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.slideshow),
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ReelsPlayerScreen(
+                              reels: allVideos,
+                              initialIndex: allVideos.indexOf(video),
+                            ),
+                          ),
+                        ),
+                        tooltip: 'Reels\'de Aç',
+                      ),
+                    ],
+                  ),
+                ),
+              )),
         ],
       ),
     );
