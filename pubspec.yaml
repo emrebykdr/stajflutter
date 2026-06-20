@@ -34,6 +34,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   video_player: ^2.9.3
   youtube_player_flutter: ^9.1.1
+  youtube_player_iframe: ^5.0.0
+  shared_preferences: ^2.2.0
   flutter_local_notifications: ^18.0.1
   flutter_map: ^7.0.2
   latlong2: ^0.9.1

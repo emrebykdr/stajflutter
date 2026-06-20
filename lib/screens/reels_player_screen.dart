@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import '../widgets/video_player_widget.dart';
-import 'reels_screen.dart';
+import '../services/video_storage_service.dart';
 
 class ReelsPlayerScreen extends StatefulWidget {
-  final List<ReelData> reels;
+  final List<VideoItem> videos;
   final int initialIndex;
 
   const ReelsPlayerScreen({
     super.key,
-    required this.reels,
+    required this.videos,
     required this.initialIndex,
   });
 
@@ -38,14 +38,14 @@ class _ReelsPlayerScreenState extends State<ReelsPlayerScreen> {
       body: PageView.builder(
         scrollDirection: Axis.vertical,
         controller: _pageController,
-        itemCount: widget.reels.length,
+        itemCount: widget.videos.length,
         itemBuilder: (context, index) {
-          final reel = widget.reels[index];
+          final video = widget.videos[index];
           return Stack(
             fit: StackFit.expand,
             children: [
               VideoPlayerWidget(
-                videoUrl: reel.videoUrl,
+                videoUrl: video.videoUrl,
                 autoPlay: true,
                 showControls: true,
               ),
@@ -94,12 +94,9 @@ class _ReelsPlayerScreenState extends State<ReelsPlayerScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (reel.isYoutube)
+                    if (video.isYoutube)
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         margin: const EdgeInsets.only(bottom: 6),
                         decoration: BoxDecoration(
                           color: Colors.red,
@@ -115,7 +112,7 @@ class _ReelsPlayerScreenState extends State<ReelsPlayerScreen> {
                         ),
                       ),
                     Text(
-                      reel.title,
+                      video.title,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,

@@ -143,7 +143,7 @@ class _MapScreenState extends State<MapScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: Colors.deepPurple,
+                      color: Colors.blue,
                     ),
                   ),
                   Icon(

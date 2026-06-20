@@ -1,6 +1,19 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart' as yt_mobile;
+import 'package:youtube_player_iframe/youtube_player_iframe.dart' as yt_web;
+
+String? extractYoutubeId(String url) {
+  final id = yt_mobile.YoutubePlayer.convertUrlToId(url);
+  if (id != null) return id;
+  final uri = Uri.tryParse(url);
+  if (uri == null) return null;
+  if (uri.host.contains('youtu.be')) {
+    return uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+  }
+  return uri.queryParameters['v'];
+}
 
 class VideoPlayerWidget extends StatefulWidget {
   final String videoUrl;
@@ -20,7 +33,8 @@ class VideoPlayerWidget extends StatefulWidget {
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   VideoPlayerController? _nativeController;
-  YoutubePlayerController? _youtubeController;
+  yt_mobile.YoutubePlayerController? _mobileYtController;
+  yt_web.YoutubePlayerController? _webYtController;
   bool _isYoutube = false;
   bool _isLoading = true;
   String? _error;
@@ -35,7 +49,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   }
 
   void _initYoutube() {
-    final videoId = YoutubePlayer.convertUrlToId(widget.videoUrl);
+    final videoId = extractYoutubeId(widget.videoUrl);
     if (videoId == null) {
       if (mounted) {
         setState(() {
@@ -46,13 +60,25 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
       return;
     }
 
-    _youtubeController = YoutubePlayerController(
-      initialVideoId: videoId,
-      flags: YoutubePlayerFlags(
+    if (kIsWeb) {
+      _webYtController = yt_web.YoutubePlayerController.fromVideoId(
+        videoId: videoId,
         autoPlay: widget.autoPlay,
-        mute: false,
-      ),
-    );
+        params: const yt_web.YoutubePlayerParams(
+          showControls: true,
+          showFullscreenButton: true,
+          playsInline: true,
+        ),
+      );
+    } else {
+      _mobileYtController = yt_mobile.YoutubePlayerController(
+        initialVideoId: videoId,
+        flags: yt_mobile.YoutubePlayerFlags(
+          autoPlay: widget.autoPlay,
+          mute: false,
+        ),
+      );
+    }
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -80,7 +106,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   @override
   void dispose() {
     _nativeController?.dispose();
-    _youtubeController?.dispose();
+    _mobileYtController?.dispose();
+    _webYtController?.close();
     super.dispose();
   }
 
@@ -125,10 +152,12 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     if (_isYoutube) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: YoutubePlayer(
-          controller: _youtubeController!,
-          showVideoProgressIndicator: true,
-        ),
+        child: kIsWeb
+            ? yt_web.YoutubePlayer(controller: _webYtController!)
+            : yt_mobile.YoutubePlayer(
+                controller: _mobileYtController!,
+                showVideoProgressIndicator: true,
+              ),
       );
     }
 

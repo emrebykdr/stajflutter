@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../services/notification_service.dart';
+import '../services/web_notification_stub.dart'
+    if (dart.library.html) '../services/web_notification_web.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -23,13 +26,24 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   Future<void> _init() async {
     try {
-      final result = await _notificationService.initialize();
-      if (mounted) {
-        setState(() {
-          _isInitialized = result;
-          _status = result ? 'Hazir' : null;
-          if (!result) _error = 'Bildirim baslatilamadi';
-        });
+      if (kIsWeb) {
+        final result = await initWebNotifications();
+        if (mounted) {
+          setState(() {
+            _isInitialized = result;
+            _status = result ? 'Tarayici bildirimleri hazir' : null;
+            if (!result) _error = 'Bildirim izni reddedildi';
+          });
+        }
+      } else {
+        final result = await _notificationService.initialize();
+        if (mounted) {
+          setState(() {
+            _isInitialized = result;
+            _status = result ? 'Hazir' : null;
+            if (!result) _error = 'Bildirim baslatilamadi';
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -50,11 +64,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
     try {
       await Future.delayed(const Duration(seconds: 5));
 
-      await _notificationService.showNotification(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title: 'Test Bildirimi',
-        body: 'Bu bir test bildirimidir!',
-      );
+      if (kIsWeb) {
+        await showWebNotification(
+          title: 'Test Bildirimi',
+          body: 'Bu bir test bildirimidir!',
+        );
+      } else {
+        await _notificationService.showNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title: 'Test Bildirimi',
+          body: 'Bu bir test bildirimidir!',
+        );
+      }
 
       if (mounted) {
         setState(() {
@@ -78,10 +99,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bildirim Sistemi'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: theme.colorScheme.inversePrimary,
       ),
       body: Center(
         child: Padding(
@@ -90,20 +113,22 @@ class _NotificationScreenState extends State<NotificationScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.notifications_active,
+                kIsWeb ? Icons.notifications_active : Icons.notifications_active,
                 size: 80,
-                color: Theme.of(context).colorScheme.primary,
+                color: theme.colorScheme.primary,
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Local Notification Demo',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              Text(
+                kIsWeb ? 'Browser Notification Demo' : 'Local Notification Demo',
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Butona tikladiginizda 5 saniye sonra\ntelefonunuza bildirim gonderilecektir.',
+              Text(
+                kIsWeb
+                    ? 'Butona tikladiginizda 5 saniye sonra\ntarayicinizdan bildirim gonderilecektir.'
+                    : 'Butona tikladiginizda 5 saniye sonra\ntelefonunuza bildirim gonderilecektir.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
               if (_status != null)
