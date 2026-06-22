@@ -36,6 +36,7 @@ dependencies:
   youtube_player_flutter: ^9.1.1
   youtube_player_iframe: ^5.0.0
   shared_preferences: ^2.2.0
+  pointer_interceptor: ^0.10.1
   flutter_local_notifications: ^18.0.1
   flutter_map: ^7.0.2
   latlong2: ^0.9.1

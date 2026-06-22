@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 import '../widgets/video_player_widget.dart';
 import '../services/video_storage_service.dart';
 
@@ -55,18 +56,20 @@ class _ReelsPlayerScreenState extends State<ReelsPlayerScreen> {
                 child: SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                          size: 24,
+                    child: PointerInterceptor(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
                       ),
                     ),
@@ -76,50 +79,55 @@ class _ReelsPlayerScreenState extends State<ReelsPlayerScreen> {
               Positioned(
                 right: 16,
                 bottom: 120,
-                child: Column(
-                  children: [
-                    _ActionButton(icon: Icons.favorite_border, label: '1.2K'),
-                    const SizedBox(height: 20),
-                    _ActionButton(icon: Icons.comment_outlined, label: '48'),
-                    const SizedBox(height: 20),
-                    _ActionButton(icon: Icons.send_outlined, label: 'Share'),
-                  ],
+                child: PointerInterceptor(
+                  child: Column(
+                    children: [
+                      _ActionButton(icon: Icons.favorite_border, label: '1.2K'),
+                      const SizedBox(height: 20),
+                      _ActionButton(icon: Icons.comment_outlined, label: '48'),
+                      const SizedBox(height: 20),
+                      _ActionButton(icon: Icons.send_outlined, label: 'Share'),
+                    ],
+                  ),
                 ),
               ),
               Positioned(
                 left: 16,
                 right: 72,
                 bottom: 40,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (video.isYoutube)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        margin: const EdgeInsets.only(bottom: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          'YouTube',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                child: PointerInterceptor(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (video.isYoutube)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          margin: const EdgeInsets.only(bottom: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'YouTube',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
+                      Text(
+                        video.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    Text(
-                      video.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],

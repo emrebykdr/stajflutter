@@ -27,12 +27,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Future<void> _init() async {
     try {
       if (kIsWeb) {
-        final result = await initWebNotifications();
         if (mounted) {
           setState(() {
-            _isInitialized = result;
-            _status = result ? 'Tarayici bildirimleri hazir' : null;
-            if (!result) _error = 'Bildirim izni reddedildi';
+            _isInitialized = true;
+            _status = 'Hazir — butona tiklayin';
           });
         }
       } else {
@@ -65,6 +63,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
       await Future.delayed(const Duration(seconds: 5));
 
       if (kIsWeb) {
+        final granted = await initWebNotifications();
+        if (!granted) {
+          if (mounted) {
+            setState(() {
+              _isScheduled = false;
+              _error = 'Bildirim izni reddedildi';
+              _status = null;
+            });
+          }
+          return;
+        }
         await showWebNotification(
           title: 'Test Bildirimi',
           body: 'Bu bir test bildirimidir!',
